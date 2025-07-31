@@ -563,6 +563,8 @@ main {
   border-radius: 8px;
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  min-height: 0;
 }
 
 .panel-header {
