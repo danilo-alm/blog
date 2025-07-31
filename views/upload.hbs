@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  {{> meta}}
+  <title>Create New Post</title>
+</head>
+
+<body>
+  <script>0</script>
+  {{> nav}}
+
+  <main class="upload-container">
+    {{> back_to_home}}
+
+    <header class="upload-header">
+      <h1 class="upload-title">Create New Post</h1>
+      <p class="upload-subtitle">Write and preview your blog post content</p>
+    </header>
+
+    <form id="post-form" method="POST" action="/api/posts">
+      <!-- Post Metadata -->
+      <section class="post-metadata">
+        <div class="metadata-row">
+          <div class="form-group">
+            <label for="post-title" class="form-label">Post Title</label>
+            <input type="text" id="post-title" name="title" class="form-input" placeholder="Enter your post title..."
+              required>
+          </div>
+          <div class="form-group">
+            <label for="post-slug" class="form-label">URL Slug</label>
+            <input type="text" id="post-slug" name="slug" class="form-input" placeholder="auto-generated-from-title"
+              readonly>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="post-excerpt" class="form-label">Excerpt</label>
+          <textarea id="post-excerpt" name="excerpt" class="form-input form-textarea"
+            placeholder="Write a brief description of your post..." rows="3"></textarea>
+        </div>
+      </section>
+
+      <!-- Editor Layout -->
+      <div class="editor-layout">
+        <!-- HTML Editor -->
+        <div class="editor-panel">
+          <div class="panel-header">
+            <h3 class="panel-title">HTML Editor</h3>
+          </div>
+          <div class="panel-content">
+            <textarea id="html-editor" name="content" class="html-editor" placeholder="Write your HTML content here...
+
+Example:
+<h2>Introduction</h2>
+<p>This is a paragraph with <strong>bold text</strong> and <em>italic text</em>.</p>
+
+<h3>Code Example</h3>
+<pre><code>console.log('Hello, World!');</code></pre>
+
+<blockquote>
+<p>This is a quote that will be styled nicely.</p>
+</blockquote>"></textarea>
+          </div>
+        </div>
+
+        <!-- Preview Panel -->
+        <div class="editor-panel">
+          <div class="panel-header">
+            <h3 class="panel-title">Live Preview</h3>
+          </div>
+          <div class="panel-content">
+            <div id="preview-content" class="post-body preview-content">
+              <p style="color: #52525b; font-style: italic;">Start typing in the editor to see your preview...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <button type="button" class="btn btn-secondary" id="save-draft" onclick="saveDraft()">
+          💾 Save Draft
+        </button>
+        <button type="submit" class="btn btn-primary">
+          🚀 Publish Post
+        </button>
+      </div>
+    </form>
+  </main>
+
+  <script>
+    // Simple live preview functionality
+    document.addEventListener('DOMContentLoaded', function () {
+      const htmlEditor = document.getElementById('html-editor');
+      const previewContent = document.getElementById('preview-content');
+      const titleInput = document.getElementById('post-title');
+      const slugInput = document.getElementById('post-slug');
+
+      function updatePreview() {
+        const htmlContent = htmlEditor.value;
+        if (htmlContent.trim()) {
+          previewContent.innerHTML = htmlContent;
+        } else {
+          previewContent.innerHTML = '<p style="color: #52525b; font-style: italic;">Start typing in the editor to see your preview...</p>';
+        }
+      }
+
+      async function updateSlug() {
+        const title = titleInput.value;
+        if (title) {
+          const slugified = await fetch('/api/posts/slugify', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              text: title
+            })
+          })
+            .then(response => response.json())
+            .then(data => data.result);
+          console.log(slugified)
+          slugInput.value = slugified;
+        } else {
+          slugInput.value = '';
+        }
+      }
+
+      htmlEditor.addEventListener('input', updatePreview);
+      htmlEditor.addEventListener('paste', function () {
+        setTimeout(updatePreview, 10);
+      });
+
+      titleInput.addEventListener('input', updateSlug);
+
+      let autoSaveTimeout;
+      function autoSave() {
+        clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = setTimeout(() => {
+          const formData = {
+            title: titleInput.value,
+            excerpt: document.getElementById('post-excerpt').value,
+            content: htmlEditor.value,
+            slug: slugInput.value
+          };
+
+          localStorage.setItem('blog-post-draft', JSON.stringify(formData));
+          console.log('Draft auto-saved');
+        }, 2000);
+      }
+
+      [titleInput, document.getElementById('post-excerpt'), htmlEditor].forEach(input => {
+        input.addEventListener('input', autoSave);
+      });
+
+      function loadDraft() {
+        const draft = localStorage.getItem('blog-post-draft');
+        if (draft) {
+          const data = JSON.parse(draft);
+          titleInput.value = data.title || '';
+          document.getElementById('post-excerpt').value = data.excerpt || '';
+          htmlEditor.value = data.content || '';
+          slugInput.value = data.slug || '';
+          updatePreview();
+        }
+      }
+
+      loadDraft();
+
+      // Clear draft on successful submission
+      document.getElementById('post-form').addEventListener('submit', function () {
+        localStorage.removeItem('blog-post-draft');
+      });
+    });
+
+    function saveDraft() {
+      const formData = {
+        title: document.getElementById('post-title').value,
+        excerpt: document.getElementById('post-excerpt').value,
+        content: document.getElementById('html-editor').value,
+        slug: document.getElementById('post-slug').value
+      };
+
+      localStorage.setItem('blog-post-draft', JSON.stringify(formData));
+
+      // Show feedback
+      const btn = document.getElementById('save-draft');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '✅ Saved!';
+      btn.style.backgroundColor = '#059669';
+
+      setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.style.backgroundColor = '';
+      }, 2000);
+    }
+
+    // Ctrl/Cmd + S to save draft
+    document.addEventListener('keydown', function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        saveDraft();
+      }
+    });
+  </script>
+</body>
+
+</html>

@@ -11,6 +11,8 @@ import {
   Post,
   Res,
 } from '@nestjs/common';
+import { SlugifiedDto } from './dto/slugified.dto';
+import { SlugifyRequestDto } from './dto/slugify-request.dto';
 
 @Controller('api/posts')
 export class PostController {
@@ -29,5 +31,11 @@ export class PostController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string): Promise<void> {
     await this.postService.remove(id);
+  }
+
+  @Post('slugify')
+  @HttpCode(HttpStatus.OK)
+  slugify(@Body() slugifyDto: SlugifyRequestDto): SlugifiedDto {
+    return this.postService.slugify(slugifyDto.text);
   }
 }

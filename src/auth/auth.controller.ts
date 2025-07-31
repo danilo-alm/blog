@@ -27,10 +27,9 @@ export class AuthController {
     return {};
   }
 
-  @Get('admin/upload')
-  @Render('upload')
-  uploadPage() {
-    return {};
+  @Get('/upload')
+  uploadPage(@Res() res: Response) {
+    res.render('upload', { admin: true });
   }
 
   @Post('login')

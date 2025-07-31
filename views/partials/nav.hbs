@@ -2,8 +2,29 @@
   <div class="nav-container">
     <a href="/" class="logo">daniloalm.com</a>
     <ul class="nav-links">
+      {{#if admin}}
+        <li><a href="/admin/upload">Create</a></li>
+      {{/if}}
+      
       <li><a href="#about">About</a></li>
       <li><a href="https://github.com/danilo-alm" target="_blank">Contact</a></li>
+
+      {{#if admin}}
+        <li><a href="/admin/logout">Logout</a></li>
+      {{/if}}
     </ul>
   </div>
 </nav>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const currentPath = window.location.pathname;
+    const navLinks = document.querySelectorAll('.nav-links a');
+    
+    navLinks.forEach(link => {
+      if (link.getAttribute('href') === currentPath) {
+        link.classList.add('active');
+      }
+    });
+  });
+</script>

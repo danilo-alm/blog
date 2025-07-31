@@ -6,6 +6,7 @@ import { PostSummaryDto } from './dto/post-summary.dto';
 import { plainToInstance } from 'class-transformer';
 import { PostResponseDto } from './dto/post-response.dto';
 import { PostsByDateDto } from './dto/posts-by-date.dto';
+import { SlugifiedDto } from './dto/slugified.dto';
 
 @Injectable()
 export class PostService {
@@ -39,6 +40,12 @@ export class PostService {
 
   async remove(id: string): Promise<void> {
     await this.prisma.post.delete({ where: { id } });
+  }
+
+  slugify(text: string): SlugifiedDto {
+    return {
+      result: this.slugifyTitle(text),
+    };
   }
 
   private generatePostId(title: string): string {
