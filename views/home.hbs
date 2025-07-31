@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  {{> meta}}
+  <title>Blog</title>
+</head>
+
+<body>
+  <script>0</script>
+  {{> nav}}
+
+  <main>
+    <header class="content-header">
+      <h1>Bem-vindo</h1>
+      <p>Um blog pessoal</p>
+    </header>
+
+    {{#each postsByDate}}
+    <section class="date-section">
+      <h2 class="date-header">{{dateLabel}}</h2>
+      <ul class="posts-list">
+        {{#each posts}}
+        <li class="post-item">
+          <a href="/posts/{{id}}" class="post-link">
+            <div class="post-title-home">{{title}}</div>
+            <div class="post-excerpt">{{excerpt}}</div>
+          </a>
+        </li>
+        {{/each}}
+      </ul>
+    </section>
+    {{/each}}
+  </main>
+</body>
+
+</html>
