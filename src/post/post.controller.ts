@@ -5,6 +5,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   HttpCode,
   HttpStatus,
   Param,
@@ -13,6 +14,7 @@ import {
 } from '@nestjs/common';
 import { SlugifiedDto } from './dto/slugified.dto';
 import { SlugifyRequestDto } from './dto/slugify-request.dto';
+import { PostSummaryDto } from './dto/post-summary.dto';
 
 @Controller('api/posts')
 export class PostController {
@@ -25,6 +27,12 @@ export class PostController {
   ): Promise<void> {
     const id = await this.postService.create(createPostDto);
     res.status(HttpStatus.CREATED).location(`/posts/${id}`).send();
+  }
+
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  async findAll(): Promise<PostSummaryDto[]> {
+    return this.postService.findAll();
   }
 
   @Delete(':id')

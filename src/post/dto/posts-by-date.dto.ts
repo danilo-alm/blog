@@ -5,7 +5,7 @@ import { Type } from 'class-transformer';
 export class PostsByDateDto {
   @IsString()
   @IsNotEmpty()
-  dateLabel: string;
+  date_label: string; // json naming
 
   @IsArray()
   @ValidateNested({ each: true })
