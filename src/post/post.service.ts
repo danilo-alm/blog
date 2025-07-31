@@ -7,6 +7,8 @@ import { plainToInstance } from 'class-transformer';
 import { PostResponseDto } from './dto/post-response.dto';
 import { PostsByDateDto } from './dto/posts-by-date.dto';
 import { SlugifiedDto } from './dto/slugified.dto';
+import { sanitizePostContent } from 'src/common/sanitizer/sanitize-post-content';
+import { minify } from 'html-minifier';
 
 @Injectable()
 export class PostService {
@@ -14,10 +16,15 @@ export class PostService {
 
   async create(dto: CreatePostDto): Promise<string> {
     const id = this.generatePostId(dto.title);
+    const sanitizedContent = sanitizePostContent(dto.content);
+    const minifiedContent = this.minifyContent(sanitizedContent);
+
     const post = await this.prisma.post.create({
       data: {
         id,
-        ...dto,
+        title: dto.title,
+        excerpt: dto.excerpt,
+        content: minifiedContent,
         date: new Date(),
       },
       select: { id: true },
@@ -62,6 +69,19 @@ export class PostService {
     const datePath = this.getTodayDatePath();
     const slugifiedTitle = this.slugifyTitle(title);
     return `${datePath}/${slugifiedTitle}`;
+  }
+
+  private minifyContent(content: string): string {
+    return minify(content, {
+      removeAttributeQuotes: true,
+      removeComments: true,
+      removeEmptyAttributes: true,
+      removeRedundantAttributes: true,
+      removeScriptTypeAttributes: true,
+      removeStyleLinkTypeAttributes: true,
+      collapseWhitespace: true,
+      conservativeCollapse: true,
+    }).trim();
   }
 
   private getTodayDatePath(): string {

@@ -3,7 +3,7 @@ import { PostModule } from './post/post.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AppController } from './app.controller';
 import { PostService } from './post/post.service';
-import * as session from 'express-session';
+import session from 'express-session';
 import { AuthMiddleware } from './auth/auth.middleware';
 import { randomBytes } from 'crypto';
 import { AuthController } from './auth/auth.controller';

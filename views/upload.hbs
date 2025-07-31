@@ -88,6 +88,7 @@ Example:
     </form>
   </main>
 
+  <script src="/scripts/sanitize.js"></script>
   <script>
     // Simple live preview functionality
     document.addEventListener('DOMContentLoaded', function () {
@@ -97,7 +98,7 @@ Example:
       const slugInput = document.getElementById('post-slug');
 
       function updatePreview() {
-        const htmlContent = htmlEditor.value;
+        const htmlContent = sanitizeModule.sanitizePostContent(htmlEditor.value);
         if (htmlContent.trim()) {
           previewContent.innerHTML = htmlContent;
         } else {
