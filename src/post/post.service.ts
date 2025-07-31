@@ -30,6 +30,16 @@ export class PostService {
     return plainToInstance(PostResponseDto, post);
   }
 
+  async findAll(page: number = 1, limit?: number): Promise<PostSummaryDto[]> {
+    const posts = await this.prisma.post.findMany({
+      skip: (page - 1) * (limit ?? 0),
+      take: limit,
+      orderBy: { date: 'desc' },
+      omit: { content: true },
+    });
+    return plainToInstance(PostSummaryDto, posts);
+  }
+
   async findAllGroupedByDate(
     page: number = 1,
     limit?: number,
@@ -66,10 +76,10 @@ export class PostService {
   private groupPostsByMonth(posts: PostSummaryDto[]): PostsByDateDto[] {
     return posts.reduce((acc, post) => {
       const monthYear = this.getMonthYearLabel(post.date);
-      let group = acc.find((g) => g.dateLabel === monthYear);
+      let group = acc.find((g) => g.date_label === monthYear);
 
       if (!group) {
-        group = { dateLabel: monthYear, posts: [] };
+        group = { date_label: monthYear, posts: [] };
         acc.push(group);
       }
 
@@ -83,18 +93,5 @@ export class PostService {
       month: 'long',
       year: 'numeric',
     });
-  }
-
-  private async findAll(
-    page: number = 1,
-    limit?: number,
-  ): Promise<PostSummaryDto[]> {
-    const posts = await this.prisma.post.findMany({
-      skip: (page - 1) * (limit ?? 0),
-      take: limit,
-      orderBy: { date: 'desc' },
-      omit: { content: true },
-    });
-    return plainToInstance(PostSummaryDto, posts);
   }
 }
