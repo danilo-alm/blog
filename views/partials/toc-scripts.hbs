@@ -1,0 +1,81 @@
+<script>
+  function dinamicallyGenerateToc() {
+    const tocList = document.getElementById('toc-list');
+    const headings = document.querySelectorAll('h2, h3, h4');
+
+    headings.forEach(heading => {
+      if (heading.classList.contains('toc-title')) {
+        return;
+      }
+
+      if (!heading.id) {
+        heading.id = slugify(heading.textContent);
+      }
+
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+
+      const level = parseInt(heading.tagName.charAt(1));
+      if (level >= 3) {
+        li.className = `toc-h${level}`;
+      }
+
+      a.href = `#${heading.id}`;
+      a.textContent = heading.textContent;
+
+      li.appendChild(a);
+      tocList.appendChild(li);
+    });
+  }
+
+  function slugify(text) {
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '') // Remove special characters
+      .replace(/[\s_-]+/g, '-') // Replace spaces and underscores with hyphens
+      .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+  }
+
+  function highlightActiveTocItem() {
+    const tocLinks = document.querySelectorAll('#toc-list a');
+    const headings = document.querySelectorAll('h2[id], h3[id], h4[id]');
+    const firstHeadingWithId = Array.from(headings).find(h => h.id);
+
+    const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const headerMaxMargin = 2.5 * rootFontSize;  // 2.5rem (.post-body h2)
+    const navbarHeight = document.querySelector('nav').offsetHeight;
+
+    const threshold = navbarHeight + headerMaxMargin;
+
+    function updateActiveTocItem() {
+      let current = '';
+
+      headings.forEach(heading => {
+        const rect = heading.getBoundingClientRect();
+        if (rect.top <= threshold) {
+          current = heading.id;
+        }
+      });
+
+      if (!current && firstHeadingWithId) {
+        current = firstHeadingWithId.id;
+      }
+
+      tocLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + current) {
+          link.classList.add('active');
+        }
+      });
+    }
+
+    window.addEventListener('scroll', updateActiveTocItem);
+    updateActiveTocItem();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    dinamicallyGenerateToc();
+    highlightActiveTocItem();
+  });
+</script>
