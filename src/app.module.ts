@@ -26,9 +26,12 @@ export class AppModule implements NestModule {
       )
       .forRoutes('*');
 
-    consumer
-      .apply(AuthMiddleware)
-      .exclude('/api/posts/slugify', '/admin/login', '/admin/logout')
-      .forRoutes('/admin/*', '/api/*');
+    const isDev = process.env.PROFILE == 'dev';
+    if (!isDev) {
+      consumer
+        .apply(AuthMiddleware)
+        .exclude('/api/posts/slugify', '/admin/login', '/admin/logout')
+        .forRoutes('/admin/*', '/api/*');
+    }
   }
 }
