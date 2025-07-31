@@ -15,6 +15,7 @@ import {
 import { SlugifiedDto } from './dto/slugified.dto';
 import { SlugifyRequestDto } from './dto/slugify-request.dto';
 import { PostSummaryDto } from './dto/post-summary.dto';
+import { PostResponseDto } from './dto/post-response.dto';
 
 @Controller('api/posts')
 export class PostController {
@@ -27,6 +28,17 @@ export class PostController {
   ): Promise<void> {
     const id = await this.postService.create(createPostDto);
     res.status(HttpStatus.CREATED).location(`/posts/${id}`).send();
+  }
+
+  @Get(':year/:month/:day/:slug')
+  async findOne(
+    @Param('year') year: string,
+    @Param('month') month: string,
+    @Param('day') day: string,
+    @Param('slug') slug: string,
+  ): Promise<PostResponseDto> {
+    const id = `${year}/${month}/${day}/${slug}`;
+    return this.postService.findOne(id);
   }
 
   @Get()

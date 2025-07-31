@@ -17,7 +17,9 @@ export class PostResponseDto {
   @IsString()
   title: string;
 
-  @Transform(({ value }: { value: Date }) => formatDate(value))
+  @Transform(({ value }: { value: Date }) => formatDate(value), {
+    toClassOnly: true,
+  })
   @IsString()
   date: string;
 }
