@@ -1,0 +1,57 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Render,
+  Res,
+  Session,
+} from '@nestjs/common';
+import { Response } from 'express';
+import * as bcrypt from 'bcrypt';
+
+@Controller('admin')
+export class AuthController {
+  private readonly adminPasswordHash: string;
+
+  constructor() {
+    if (!process.env.ADMIN_PASSWORD_HASH) {
+      throw new Error('ADMIN_PASSWORD_HASH environment variable is required');
+    }
+    this.adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
+  }
+
+  @Get('login')
+  @Render('login')
+  loginPage() {
+    return {};
+  }
+
+  @Get('admin/upload')
+  @Render('upload')
+  uploadPage() {
+    return {};
+  }
+
+  @Post('login')
+  login(
+    @Body('password') password: string,
+    @Session() session: Record<string, any>,
+    @Res() res: Response,
+  ) {
+    if (bcrypt.compareSync(password, this.adminPasswordHash)) {
+      session.isAuthenticated = true;
+      const redirectUrl = (session.redirectUrl as string) || '/admin/upload';
+      delete session.redirectUrl;
+      res.redirect(redirectUrl);
+    } else {
+      res.render('login', { error: 'Invalid password' });
+    }
+  }
+
+  @Get('logout')
+  logout(@Session() session: Record<string, any>, @Res() res: Response) {
+    session.isAuthenticated = false;
+    res.redirect('/');
+  }
+}

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  {{> meta}}
+  <title>Login - My Blog</title>
+</head>
+
+<body>
+  {{> nav}}
+
+  <main class="login-container">
+    <div class="login-card">
+      <div class="login-header">
+        <h1 class="login-title">Admin Login</h1>
+      </div>
+
+      {{#if error}}
+      <div class="error-message">
+        <span class="error-icon">⚠️</span>
+        <div class="error-text">{{error}}</div>
+      </div>
+      {{/if}}
+
+      <form class="login-form" method="POST" action="/admin/login">
+        <div class="form-group">
+          <label for="username" class="form-label">Username</label>
+          <input type="text" id="username" name="username" class="form-input" placeholder="Enter username" value="admin"
+            readonly>
+        </div>
+
+        <div class="form-group">
+          <label for="password" class="form-label">Password</label>
+          <input type="password" id="password" name="password" class="form-input" placeholder="Enter your password"
+            required autocomplete="current-password">
+        </div>
+
+        <button type="submit" class="login-button">
+          Sign In
+        </button>
+      </form>
+
+      <div class="admin-info">
+        <div class="admin-info-title">Admin Access Only</div>
+        <div class="admin-info-text">
+          This blog has a single admin user. Enter your password to access the admin panel.
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const form = document.querySelector('.login-form');
+      const button = document.querySelector('.login-button');
+      const passwordInput = document.querySelector('#password');
+
+      passwordInput.focus();
+
+      form.addEventListener('submit', function (e) {
+        button.disabled = true;
+        button.textContent = 'Signing In...';
+
+        setTimeout(() => {
+          button.disabled = false;
+          button.textContent = 'Sign In';
+        }, 3000);
+      });
+
+      document.querySelector('#username').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          passwordInput.focus();
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>
