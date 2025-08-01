@@ -2,6 +2,8 @@
   "$schema": "https://json.schemastore.org/nest-cli",
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
+  "watchAssets": true,
+  "assets": ["**/*.hbs", "**/*.handlebars"],
   "compilerOptions": {
     "deleteOutDir": true,
     "assets": [
@@ -11,5 +13,4 @@
       }
     ]
   }
-
 }
