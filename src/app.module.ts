@@ -26,7 +26,7 @@ export class AppModule implements NestModule {
       )
       .forRoutes('*');
 
-    const isDev = process.env.PROFILE == 'dev';
+    const isDev = process.env.NODE_ENV === 'development';
     if (!isDev) {
       consumer
         .apply(AuthMiddleware)
