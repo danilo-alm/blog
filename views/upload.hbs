@@ -67,6 +67,12 @@ Example:
         <div class="editor-panel">
           <div class="panel-header">
             <h3 class="panel-title">Live Preview</h3>
+            <div class="toggle-container">
+              <span class="toggle-label">Auto Scroll</span>
+              <div id="auto-scroll-toggle" class="toggle active" onclick="toggleSwitch(this)">
+                <div class="toggle-thumb"></div>
+              </div>
+            </div>
           </div>
           <div class="panel-content">
             <div id="preview-content" class="post-body preview-content">
@@ -90,13 +96,14 @@ Example:
 
   <script src="/scripts/sanitize.js"></script>
   <script>
+    const htmlEditor = document.getElementById('html-editor');
+    const previewContent = document.getElementById('preview-content');
+    const titleInput = document.getElementById('post-title');
+    const slugInput = document.getElementById('post-slug');
+    const autoScrollToggle = document.getElementById('auto-scroll-toggle');
+
     // Simple live preview functionality
     document.addEventListener('DOMContentLoaded', function () {
-      const htmlEditor = document.getElementById('html-editor');
-      const previewContent = document.getElementById('preview-content');
-      const titleInput = document.getElementById('post-title');
-      const slugInput = document.getElementById('post-slug');
-
       function updatePreview() {
         const htmlContent = sanitizeModule.sanitizePostContent(htmlEditor.value);
         if (htmlContent.trim()) {
@@ -203,6 +210,25 @@ Example:
         saveDraft();
       }
     });
+
+    htmlEditor.addEventListener('scroll', () => {
+      if (autoScrollToggle.classList.contains('active')) {
+        const scrollPercent = htmlEditor.scrollTop / (htmlEditor.scrollHeight - htmlEditor.clientHeight);
+        console.log('scrolled', scrollPercent);
+        previewContent.scrollTop = scrollPercent * (previewContent.scrollHeight - previewContent.clientHeight);
+      }
+    });
+
+    function toggleScrollOnPreview() {
+      previewContent.style.overflow = autoScrollToggle.classList.contains('active') ? 'hidden' : 'auto';
+    }
+
+    function toggleSwitch(element) {
+      element.classList.toggle('active');
+      toggleScrollOnPreview();
+    }
+    
+    toggleScrollOnPreview(); 
   </script>
 </body>
 
