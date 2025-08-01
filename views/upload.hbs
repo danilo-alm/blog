@@ -96,139 +96,183 @@ Example:
 
   <script src="/scripts/sanitize.js"></script>
   <script>
-    const htmlEditor = document.getElementById('html-editor');
-    const previewContent = document.getElementById('preview-content');
-    const titleInput = document.getElementById('post-title');
-    const slugInput = document.getElementById('post-slug');
-    const autoScrollToggle = document.getElementById('auto-scroll-toggle');
+    class BlogEditor {
+      constructor() {
+        this.elements = {
+          htmlEditor: document.querySelector('#html-editor'),
+          previewContent: document.querySelector('#preview-content'),
+          titleInput: document.querySelector('#post-title'),
+          slugInput: document.querySelector('#post-slug'),
+          excerptInput: document.querySelector('#post-excerpt'),
+          autoScrollToggle: document.querySelector('#auto-scroll-toggle'),
+          postForm: document.querySelector('#post-form'),
+          saveDraftBtn: document.querySelector('#save-draft')
 
-    // Simple live preview functionality
-    document.addEventListener('DOMContentLoaded', function () {
-      function updatePreview() {
-        const htmlContent = sanitizeModule.sanitizePostContent(htmlEditor.value);
+        };
+
+        this.autoSaveTimeout = null;
+        this.DRAFT_KEY = 'blog-post-draft';
+        this.AUTOSAVE_DELAY = 2000;
+
+        this.init();
+      }
+
+      init() {
+        this.loadDraft();
+        this.bindEvents();
+        this.updatePreview();
+        this.configureScrollSync();
+      }
+
+      bindEvents() {
+        // Editor events
+        this.elements.htmlEditor.addEventListener('input', () => this.updatePreview());
+        this.elements.htmlEditor.addEventListener('paste', () => {
+          setTimeout(() => this.updatePreview(), 10);
+        });
+        this.elements.htmlEditor.addEventListener('scroll', () => this.handleEditorScroll());
+
+        // Form events
+        this.elements.titleInput.addEventListener('input', () => this.updateSlug());
+        this.elements.postForm.addEventListener('submit', () => this.clearDraft());
+
+        // Auto-save events
+        [this.elements.titleInput, this.elements.excerptInput, this.elements.htmlEditor]
+          .forEach(input => input.addEventListener('input', () => this.scheduleAutoSave()));
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => this.handleKeyboardShortcuts(e));
+      }
+
+      updatePreview() {
+        const htmlContent = sanitizeModule.sanitizePostContent(this.elements.htmlEditor.value);
+
         if (htmlContent.trim()) {
-          previewContent.innerHTML = htmlContent;
+          this.elements.previewContent.innerHTML = htmlContent;
         } else {
-          previewContent.innerHTML = '<p style="color: #52525b; font-style: italic;">Start typing in the editor to see your preview...</p>';
+          this.elements.previewContent.innerHTML =
+            '<p style="color: #52525b; font-style: italic;">Start typing in the editor to see your preview...</p>';
         }
       }
 
-      async function updateSlug() {
-        const title = titleInput.value;
-        if (title) {
-          const slugified = await fetch('/api/posts/slugify', {
+      async updateSlug() {
+        const title = this.elements.titleInput.value;
+
+        if (!title) {
+          this.elements.slugInput.value = '';
+          return;
+        }
+
+        try {
+          const response = await fetch('/api/posts/slugify', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              text: title
-            })
-          })
-            .then(response => response.json())
-            .then(data => data.result);
-          console.log(slugified)
-          slugInput.value = slugified;
-        } else {
-          slugInput.value = '';
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: title })
+          });
+
+          const data = await response.json();
+          this.elements.slugInput.value = data.result;
+        } catch (error) {
+          console.error('Failed to generate slug:', error);
         }
       }
 
-      htmlEditor.addEventListener('input', updatePreview);
-      htmlEditor.addEventListener('paste', function () {
-        setTimeout(updatePreview, 10);
-      });
-
-      titleInput.addEventListener('input', updateSlug);
-
-      let autoSaveTimeout;
-      function autoSave() {
-        clearTimeout(autoSaveTimeout);
-        autoSaveTimeout = setTimeout(() => {
-          const formData = {
-            title: titleInput.value,
-            excerpt: document.getElementById('post-excerpt').value,
-            content: htmlEditor.value,
-            slug: slugInput.value
-          };
-
-          localStorage.setItem('blog-post-draft', JSON.stringify(formData));
+      scheduleAutoSave() {
+        clearTimeout(this.autoSaveTimeout);
+        this.autoSaveTimeout = setTimeout(() => {
+          this.saveDraftToStorage();
           console.log('Draft auto-saved');
+        }, this.AUTOSAVE_DELAY);
+      }
+
+      saveDraftToStorage() {
+        const formData = {
+          title: this.elements.titleInput.value,
+          excerpt: this.elements.excerptInput.value,
+          content: this.elements.htmlEditor.value,
+          slug: this.elements.slugInput.value
+        };
+
+        localStorage.setItem(this.DRAFT_KEY, JSON.stringify(formData));
+      }
+
+      saveDraft() {
+        this.saveDraftToStorage();
+        this.showSaveConfirmation();
+      }
+
+      showSaveConfirmation() {
+        const btn = this.elements.saveDraftBtn;
+        const originalText = btn.innerHTML;
+
+        btn.innerHTML = '✅ Saved!';
+        btn.style.backgroundColor = '#059669';
+
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.style.backgroundColor = '';
         }, 2000);
       }
 
-      [titleInput, document.getElementById('post-excerpt'), htmlEditor].forEach(input => {
-        input.addEventListener('input', autoSave);
-      });
+      loadDraft() {
+        const draft = localStorage.getItem(this.DRAFT_KEY);
 
-      function loadDraft() {
-        const draft = localStorage.getItem('blog-post-draft');
-        if (draft) {
+        if (!draft) return;
+
+        try {
           const data = JSON.parse(draft);
-          titleInput.value = data.title || '';
-          document.getElementById('post-excerpt').value = data.excerpt || '';
-          htmlEditor.value = data.content || '';
-          slugInput.value = data.slug || '';
-          updatePreview();
+          this.elements.titleInput.value = data.title || '';
+          this.elements.excerptInput.value = data.excerpt || '';
+          this.elements.htmlEditor.value = data.content || '';
+          this.elements.slugInput.value = data.slug || '';
+        } catch (error) {
+          console.error('Failed to load draft:', error);
         }
       }
 
-      loadDraft();
-
-      // Clear draft on successful submission
-      document.getElementById('post-form').addEventListener('submit', function () {
-        localStorage.removeItem('blog-post-draft');
-      });
-    });
-
-    function saveDraft() {
-      const formData = {
-        title: document.getElementById('post-title').value,
-        excerpt: document.getElementById('post-excerpt').value,
-        content: document.getElementById('html-editor').value,
-        slug: document.getElementById('post-slug').value
-      };
-
-      localStorage.setItem('blog-post-draft', JSON.stringify(formData));
-
-      // Show feedback
-      const btn = document.getElementById('save-draft');
-      const originalText = btn.innerHTML;
-      btn.innerHTML = '✅ Saved!';
-      btn.style.backgroundColor = '#059669';
-
-      setTimeout(() => {
-        btn.innerHTML = originalText;
-        btn.style.backgroundColor = '';
-      }, 2000);
-    }
-
-    // Ctrl/Cmd + S to save draft
-    document.addEventListener('keydown', function (e) {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        saveDraft();
+      clearDraft() {
+        localStorage.removeItem(this.DRAFT_KEY);
       }
-    });
 
-    htmlEditor.addEventListener('scroll', () => {
-      if (autoScrollToggle.classList.contains('active')) {
-        const scrollPercent = htmlEditor.scrollTop / (htmlEditor.scrollHeight - htmlEditor.clientHeight);
-        console.log('scrolled', scrollPercent);
-        previewContent.scrollTop = scrollPercent * (previewContent.scrollHeight - previewContent.clientHeight);
+      handleEditorScroll() {
+        if (!this.elements.autoScrollToggle.classList.contains('active')) return;
+
+        const editor = this.elements.htmlEditor;
+        const preview = this.elements.previewContent;
+
+        const scrollPercent = editor.scrollTop / (editor.scrollHeight - editor.clientHeight);
+        preview.scrollTop = scrollPercent * (preview.scrollHeight - preview.clientHeight);
       }
-    });
 
-    function toggleScrollOnPreview() {
-      previewContent.style.overflow = autoScrollToggle.classList.contains('active') ? 'hidden' : 'auto';
+      configureScrollSync() {
+        this.updateScrollBehavior();
+      }
+
+      toggleScrollSync() {
+        this.elements.autoScrollToggle.classList.toggle('active');
+        this.updateScrollBehavior();
+      }
+
+      updateScrollBehavior() {
+        const isActive = this.elements.autoScrollToggle.classList.contains('active');
+        this.elements.previewContent.style.overflow = isActive ? 'hidden' : 'auto';
+      }
+
+      handleKeyboardShortcuts(event) {
+        if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+          event.preventDefault();
+          this.saveDraft();
+        }
+      }
     }
 
     function toggleSwitch(element) {
-      element.classList.toggle('active');
-      toggleScrollOnPreview();
+      window.blogEditor?.toggleScrollSync();
     }
-    
-    toggleScrollOnPreview(); 
+
+    document.addEventListener('DOMContentLoaded', function () {
+      window.blogEditor = new BlogEditor();
+    });
   </script>
 </body>
 

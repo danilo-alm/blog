@@ -1,22 +1,48 @@
 <script>
-  function dinamicallyGenerateToc() {
-    const tocList = document.getElementById('toc-list');
-    const headings = document.querySelectorAll('h2, h3, h4');
+  class TocGenerator {
+    constructor() {
+      this.elements = {
+        tocList: document.querySelector('#toc-list'),
+        navbar: document.querySelector('nav')
+      };
 
-    headings.forEach(heading => {
-      if (heading.classList.contains('toc-title')) {
-        return;
-      }
+      this.config = {
+        headingSelectors: 'h2, h3, h4',
+        headingWithIdSelectors: 'h2[id], h3[id], h4[id]',
+        excludeClass: 'toc-title',
+        headerMarginRems: 2.5
+      };
 
-      if (!heading.id) {
-        heading.id = slugify(heading.textContent);
-      }
+      this.init();
+    }
 
+    init() {
+      this.generateToc();
+      this.initHighlighting();
+    }
+
+    slugify(text) {
+      return text
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s-]/g, '')     // Remove special characters
+        .replace(/[\s_-]+/g, '-')     // Replace spaces and underscores with hyphens
+        .replace(/^-+|-+$/g, '');     // Remove leading/trailing hyphens
+    }
+
+    calculateScrollThreshold() {
+      const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+      const headerMaxMargin = this.config.headerMarginRems * rootFontSize;
+      const navbarHeight = this.elements.navbar ? this.elements.navbar.offsetHeight : 0;
+      return navbarHeight + headerMaxMargin;
+    }
+
+    createTocItem(heading) {
       const li = document.createElement('li');
       const a = document.createElement('a');
-
       const level = parseInt(heading.tagName.charAt(1));
-      if (level >= 3) {
+
+      if (level > 2) {
         li.className = `toc-h${level}`;
       }
 
@@ -24,31 +50,29 @@
       a.textContent = heading.textContent;
 
       li.appendChild(a);
-      tocList.appendChild(li);
-    });
-  }
+      return li;
+    }
 
-  function slugify(text) {
-    return text
-      .toLowerCase()
-      .trim()
-      .replace(/[^\w\s-]/g, '') // Remove special characters
-      .replace(/[\s_-]+/g, '-') // Replace spaces and underscores with hyphens
-      .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
-  }
+    generateToc() {
+      if (!this.elements.tocList) return;
 
-  function highlightActiveTocItem() {
-    const tocLinks = document.querySelectorAll('#toc-list a');
-    const headings = document.querySelectorAll('h2[id], h3[id], h4[id]');
-    const firstHeadingWithId = Array.from(headings).find(h => h.id);
+      const headings = document.querySelectorAll(this.config.headingSelectors);
 
-    const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
-    const headerMaxMargin = 2.5 * rootFontSize;  // 2.5rem (.post-body h2)
-    const navbarHeight = document.querySelector('nav').offsetHeight;
+      headings.forEach(heading => {
+        if (heading.classList.contains(this.config.excludeClass)) {
+          return;
+        }
 
-    const threshold = navbarHeight + headerMaxMargin;
+        if (!heading.id) {
+          heading.id = this.slugify(heading.textContent);
+        }
 
-    function updateActiveTocItem() {
+        const tocItem = this.createTocItem(heading);
+        this.elements.tocList.appendChild(tocItem);
+      });
+    }
+
+    getActiveHeading(headings, threshold) {
       let current = '';
 
       headings.forEach(heading => {
@@ -58,24 +82,38 @@
         }
       });
 
-      if (!current && firstHeadingWithId) {
-        current = firstHeadingWithId.id;
+      return current;
+    }
+
+    updateActiveTocItem() {
+      const tocLinks = document.querySelectorAll('#toc-list a');
+      const headings = document.querySelectorAll(this.config.headingWithIdSelectors);
+      const firstHeading = Array.from(headings).find(h => h.id);
+      const threshold = this.calculateScrollThreshold();
+
+      let activeId = this.getActiveHeading(headings, threshold);
+
+      // Default to first heading if none are active
+      if (!activeId && firstHeading) {
+        activeId = firstHeading.id;
       }
 
+      // Update active states
       tocLinks.forEach(link => {
         link.classList.remove('active');
-        if (link.getAttribute('href') === '#' + current) {
+        if (link.getAttribute('href') === '#' + activeId) {
           link.classList.add('active');
         }
       });
     }
 
-    window.addEventListener('scroll', updateActiveTocItem);
-    updateActiveTocItem();
+    initHighlighting() {
+      window.addEventListener('scroll', () => this.updateActiveTocItem());
+      this.updateActiveTocItem();
+    }
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    dinamicallyGenerateToc();
-    highlightActiveTocItem();
+    new TocGenerator();
   });
 </script>
