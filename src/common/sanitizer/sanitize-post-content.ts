@@ -3,6 +3,7 @@ import sanitizeHtml from 'sanitize-html';
 export function sanitizePostContent(content: string): string {
   return sanitizeHtml(content, {
     allowedTags: [
+      'h1',
       'h2',
       'h3',
       'h4',
