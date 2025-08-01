@@ -12,7 +12,7 @@ export class AuthMiddleware implements NestMiddleware {
     req: Request & { session: AuthSession },
     res: Response,
     next: NextFunction,
-  ) {
+  ): void {
     if (req.session?.isAuthenticated) {
       next();
     } else {

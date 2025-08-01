@@ -26,7 +26,7 @@ export class AuthController {
   }
 
   @Get('/upload')
-  uploadPage(@Res() res: Response) {
+  uploadPage(@Res() res: Response): void {
     res.render('upload', { admin: true });
   }
 
@@ -35,7 +35,7 @@ export class AuthController {
     @Body('password') password: string,
     @Session() session: Record<string, any>,
     @Res() res: Response,
-  ) {
+  ): void {
     if (bcrypt.compareSync(password, this.adminPasswordHash)) {
       session.isAuthenticated = true;
       const redirectUrl = (session.redirectUrl as string) || '/admin/upload';
@@ -47,7 +47,7 @@ export class AuthController {
   }
 
   @Get('logout')
-  logout(@Session() session: Record<string, any>, @Res() res: Response) {
+  logout(@Session() session: Record<string, any>, @Res() res: Response): void {
     session.isAuthenticated = false;
     res.redirect('/');
   }
