@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Render,
-  Res,
-  Session,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Res, Session } from '@nestjs/common';
 import { Response } from 'express';
 import * as bcrypt from 'bcrypt';
 
@@ -22,9 +14,15 @@ export class AuthController {
   }
 
   @Get('login')
-  @Render('login')
-  loginPage() {
-    return {};
+  loginPage(
+    @Res() res: Response,
+    @Session() session: Record<string, any>,
+  ): void {
+    if (session.isAuthenticated) {
+      res.redirect('/admin/upload');
+    } else {
+      res.render('login');
+    }
   }
 
   @Get('/upload')
