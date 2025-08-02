@@ -16,18 +16,15 @@
         <h1 class="login-title">Admin Login</h1>
       </div>
 
-      {{#if error}}
-      <div class="error-message">
+      <div class="error-message" style="display:none">
         <span class="error-icon">⚠️</span>
-        <div class="error-text">{{error}}</div>
+        <div class="error-text" id="error-text"></div>
       </div>
-      {{/if}}
 
-      <form class="login-form" method="POST" action="/admin/login">
+      <form class="login-form" method="POST">
         <div class="form-group">
           <label for="username" class="form-label">Username</label>
-          <input type="text" id="username" name="username" class="form-input" placeholder="Enter username" value="admin"
-            readonly>
+          <input type="text" id="username" class="form-input" placeholder="Enter username" value="admin" readonly>
         </div>
 
         <div class="form-group">
@@ -55,17 +52,48 @@
       const form = document.querySelector('.login-form');
       const button = document.querySelector('.login-button');
       const passwordInput = document.querySelector('#password');
-
+      const errorBox = document.querySelector('.error-message');
+      const errorText = document.querySelector('#error-text');
+      
       passwordInput.focus();
 
-      form.addEventListener('submit', function (e) {
+      function restoreLoginButton() {
+        button.disabled = false;
+        button.textContent = 'Sign In';
+      }
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
         button.disabled = true;
         button.textContent = 'Signing In...';
 
-        setTimeout(() => {
-          button.disabled = false;
-          button.textContent = 'Sign In';
-        }, 3000);
+        setTimeout(restoreLoginButton, 3000);
+        console.log('Sending data', data)
+
+        const response = await fetch('/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+
+        if (response.redirected) {
+          window.location.href = response.url;
+          return;
+        } 
+
+        const { message } = await response.json(); 
+        
+        if (response.status === 401) {
+          restoreLoginButton();
+          errorText.innerHTML = message;
+          errorBox.style.display = 'flex';
+        } else {
+          alert(`Erro: ${message}`);
+        }
       });
 
       document.querySelector('#username').addEventListener('keypress', function (e) {

@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Res, Session } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Res,
+  Session,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Response } from 'express';
 import * as bcrypt from 'bcrypt';
 
@@ -50,7 +58,7 @@ export class AuthController {
       delete session.redirectUrl;
       res.redirect(redirectUrl);
     } else {
-      res.render('login', { error: 'Invalid password' });
+      throw new UnauthorizedException('Invalid password');
     }
   }
 
