@@ -126,6 +126,9 @@ main {
   font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 0.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .post-excerpt {
