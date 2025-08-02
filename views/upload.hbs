@@ -18,7 +18,7 @@
       <p class="upload-subtitle">Write and preview your blog post content</p>
     </header>
 
-    <form id="post-form" method="POST" action="/api/posts">
+    <form id="post-form" method="POST">
       <!-- Post Metadata -->
       <section class="post-metadata">
         <div class="metadata-row">
@@ -107,7 +107,6 @@ Example:
           autoScrollToggle: document.querySelector('#auto-scroll-toggle'),
           postForm: document.querySelector('#post-form'),
           saveDraftBtn: document.querySelector('#save-draft')
-
         };
 
         this.autoSaveTimeout = null;
@@ -122,6 +121,35 @@ Example:
         this.bindEvents();
         this.updatePreview();
         this.configureScrollSync();
+        this.listenFormSubmit()
+      }
+
+      listenFormSubmit() {
+        this.elements.postForm.addEventListener('submit', async (e) => {
+          e.preventDefault()
+
+          const formData = new FormData(this.elements.postForm);
+          const data = Object.fromEntries(formData.entries());
+
+          const response = await fetch('/api/posts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+
+          const postLocation = response.headers.get('Location');
+
+          if (response.status === 201) {
+            this.clearDraft();
+            window.location.href = postLocation;
+          } else if (response.redirected) {
+            this.saveDraft()
+            window.location.href = postLocation;
+          else {
+            const { message } = await response.json();
+            alert(`Erro: ${message}`);
+          }
+        });
       }
 
       bindEvents() {
@@ -134,7 +162,6 @@ Example:
 
         // Form events
         this.elements.titleInput.addEventListener('input', () => this.updateSlug());
-        this.elements.postForm.addEventListener('submit', () => this.clearDraft());
 
         // Auto-save events
         [this.elements.titleInput, this.elements.excerptInput, this.elements.htmlEditor]
@@ -181,7 +208,6 @@ Example:
         clearTimeout(this.autoSaveTimeout);
         this.autoSaveTimeout = setTimeout(() => {
           this.saveDraftToStorage();
-          console.log('Draft auto-saved');
         }, this.AUTOSAVE_DELAY);
       }
 

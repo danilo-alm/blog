@@ -38,7 +38,12 @@ export class AuthController {
   ): void {
     if (bcrypt.compareSync(password, this.adminPasswordHash)) {
       session.isAuthenticated = true;
-      const redirectUrl = (session.redirectUrl as string) || '/admin/upload';
+
+      let redirectUrl = session.redirectUrl as string;
+      if (!redirectUrl || redirectUrl.endsWith('null')) {
+        redirectUrl = '/admin/upload';
+      }
+
       delete session.redirectUrl;
       res.redirect(redirectUrl);
     } else {

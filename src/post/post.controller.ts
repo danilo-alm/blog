@@ -27,7 +27,7 @@ export class PostController {
     @Res() res: Response,
   ): Promise<void> {
     const id = await this.postService.create(createPostDto);
-    res.redirect(`/posts/${id}`);
+    res.status(HttpStatus.CREATED).location(`/posts/${id}`).send();
   }
 
   @Get(':year/:month/:day/:slug')
