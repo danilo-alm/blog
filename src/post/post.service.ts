@@ -1,14 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreatePostDto } from './dto/create-post.dto';
-import slugify from 'slugify';
 import { PostSummaryDto } from './dto/post-summary.dto';
 import { plainToInstance } from 'class-transformer';
 import { PostResponseDto } from './dto/post-response.dto';
 import { PostsByDateDto } from './dto/posts-by-date.dto';
-import { SlugifiedDto } from './dto/slugified.dto';
 import { sanitizePostContent } from 'src/common/sanitizer/sanitize-post-content';
 import { minify } from 'html-minifier';
+import { slugifyTitle } from 'src/common/slugifier/slugify-title';
 
 @Injectable()
 export class PostService {
@@ -59,15 +58,9 @@ export class PostService {
     await this.prisma.post.delete({ where: { id } });
   }
 
-  slugify(text: string): SlugifiedDto {
-    return {
-      result: this.slugifyTitle(text),
-    };
-  }
-
   private generatePostId(title: string): string {
     const datePath = this.getTodayDatePath();
-    const slugifiedTitle = this.slugifyTitle(title);
+    const slugifiedTitle = slugifyTitle(title);
     return `${datePath}/${slugifiedTitle}`;
   }
 
@@ -87,10 +80,6 @@ export class PostService {
   private getTodayDatePath(): string {
     const today = new Date();
     return today.toISOString().split('T')[0].replaceAll('-', '/');
-  }
-
-  private slugifyTitle(title: string): string {
-    return slugify(title, { lower: true, strict: true });
   }
 
   private groupPostsByMonth(posts: PostSummaryDto[]): PostsByDateDto[] {

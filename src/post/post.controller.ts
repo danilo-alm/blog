@@ -12,8 +12,6 @@ import {
   Post,
   Res,
 } from '@nestjs/common';
-import { SlugifiedDto } from './dto/slugified.dto';
-import { SlugifyRequestDto } from './dto/slugify-request.dto';
 import { PostSummaryDto } from './dto/post-summary.dto';
 import { PostResponseDto } from './dto/post-response.dto';
 
@@ -51,11 +49,5 @@ export class PostController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string): Promise<void> {
     await this.postService.remove(id);
-  }
-
-  @Post('slugify')
-  @HttpCode(HttpStatus.OK)
-  slugify(@Body() slugifyDto: SlugifyRequestDto): SlugifiedDto {
-    return this.postService.slugify(slugifyDto.text);
   }
 }

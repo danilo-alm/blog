@@ -30,7 +30,7 @@ export class AppModule implements NestModule {
     if (!isDev) {
       consumer
         .apply(AuthMiddleware)
-        .exclude('/api/posts/slugify', '/admin/login', '/admin/logout')
+        .exclude('/admin/login', '/admin/logout')
         .forRoutes('/admin/*', '/api/*');
     }
   }

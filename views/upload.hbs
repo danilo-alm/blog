@@ -95,6 +95,7 @@ Example:
   </main>
 
   <script src="/scripts/sanitize.js"></script>
+  <script src="/scripts/slugify.js"></script>
   <script>
     class BlogEditor {
       constructor() {
@@ -145,7 +146,7 @@ Example:
           } else if (response.redirected) {
             this.saveDraft()
             window.location.href = postLocation;
-          else {
+          } else {
             const { message } = await response.json();
             alert(`Erro: ${message}`);
           }
@@ -184,24 +185,7 @@ Example:
 
       async updateSlug() {
         const title = this.elements.titleInput.value;
-
-        if (!title) {
-          this.elements.slugInput.value = '';
-          return;
-        }
-
-        try {
-          const response = await fetch('/api/posts/slugify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: title })
-          });
-
-          const data = await response.json();
-          this.elements.slugInput.value = data.result;
-        } catch (error) {
-          console.error('Failed to generate slug:', error);
-        }
+        this.elements.slugInput.value = title ? slugifyModule.slugifyTitle(title) : ''
       }
 
       scheduleAutoSave() {
