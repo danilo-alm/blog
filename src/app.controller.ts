@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Res } from '@nestjs/common';
+import { Controller, Get, Param, Res, Session } from '@nestjs/common';
 import { PostService } from './post/post.service';
 import { Response } from 'express';
 
@@ -18,14 +18,12 @@ export class AppController {
     @Param('month') month: string,
     @Param('day') day: string,
     @Param('slug') slug: string,
+    @Session() session: Record<string, any>,
     @Res() res: Response,
   ): Promise<void> {
     const id = `${year}/${month}/${day}/${slug}`;
     const post = await this.postService.findOne(id);
-    res.render('post', {
-      content: post.content,
-      title: post.title,
-      date: post.date,
-    });
+    const isAdmin = session.isAuthenticated as boolean;
+    res.render('post', { post, admin: isAdmin });
   }
 }

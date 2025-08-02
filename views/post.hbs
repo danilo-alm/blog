@@ -3,7 +3,12 @@
 
 <head>
   {{> meta}}
-  <title>{{{title}}}</title>
+
+  <meta property="og:title" content="{{{post.title}}}" />
+  <meta property="og:description" content="{{{post.excerpt}}}" />
+  <meta name="description" content="{{{post.excerpt}}}" />
+  <meta property="og:url" content="https://daniloalm.com/posts/{{{post.id}}}" />
+  <title>{{{post.title}}}</title>
 </head>
 
 <body>
