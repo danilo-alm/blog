@@ -131,6 +131,9 @@ main {
 .post-excerpt {
   font-size: 0.9rem;
   color: #a1a1aa;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .post-container {
