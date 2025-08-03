@@ -24,7 +24,10 @@ async function bootstrap() {
 
   app.setViewEngine('hbs');
 
-  await app.listen(process.env.PORT ?? 3000, 'localhost');
+  await app.listen(
+    process.env.PORT ?? 3000,
+    process.env.API_HOST || 'localhost',
+  );
 }
 
 function registerPartials() {

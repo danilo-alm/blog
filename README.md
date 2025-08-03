@@ -28,6 +28,22 @@ A simple blog application built with NestJS.
 
 ## Installation
 
+### Docker
+
+```bash
+# Create a directory somewhere
+mkdir blog && cd blog
+
+# Compose and .env files
+curl https://raw.githubusercontent.com/danilo-alm/blog/refs/heads/main/compose.yml -o compose.yml
+curl https://raw.githubusercontent.com/danilo-alm/blog/refs/heads/main/.env.docker -o .env.docker
+
+# Spin up container
+docker compose up
+```
+
+### Locally
+
 ```bash
 # Clone the repository
 git clone https://github.com/danilo-alm/blog
@@ -45,16 +61,14 @@ npx prisma migrate deploy
 yarn run start:dev
 ```
 
-The default password is `secret`. Change the ADMIN_PASSWORD_HASH in `.env` if needed (Bcrypt).
-
 ## As The Blog Admin...
 
 You should know that:
 
+- The default admin password is `secret`. Change ADMIN_PASSWORD_HASH in `.env` or `.env.docker` if needed (Bcrypt).
 - A post can have headings level 1-3 in its content. Upon publishing, they'll be converted to 2-4
 - HTML Sanitization and Minification **is** performed. Sanitization details can be seen in [sanitize-post-content.ts](src/common/sanitizer/sanitize-post-content.ts), which is also bundled to the browser (ESBuild)
 - New posts can be uploaded in `/admin/upload` (authentication needed)
-
 
 ## Technologies Used
 
