@@ -40,6 +40,16 @@ export function sanitizePostContent(content: string): string {
       h1: 'h2',
       h2: 'h3',
       h3: 'h4',
+      a: (tagName, attribs) => {
+        return {
+          tagName: 'a',
+          attribs: {
+            ...attribs,
+            target: '_blank',
+            rel: 'noopener noreferrer',
+          },
+        };
+      },
     },
   });
 }
