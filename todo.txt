@@ -1,0 +1,3 @@
+- é chato nao poder scrollar no preview. deve ser possivel, porem sem a scrollbar. atrapalha ate copiar conteudo
+- syntax highlighting
+- mostar linhas em codigo
