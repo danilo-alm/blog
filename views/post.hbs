@@ -3,6 +3,7 @@
 
 <head>
   {{> meta}}
+  {{> hljs_assets}}
 
   <meta property="og:title" content="{{{post.title}}}" />
   <meta property="og:description" content="{{{post.excerpt}}}" />
@@ -16,11 +17,13 @@
   {{> nav}}
 
   <main class="post-container">
+<!-- prettier-ignore -->
 {{> post_content}}
     {{> toc}}
   </main>
 
-{{> toc_scripts}}
+  {{> toc_init}}
+  {{> hljs_init}}
 </body>
 
 </html>

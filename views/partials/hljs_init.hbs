@@ -1,0 +1,9 @@
+<script>
+document.addEventListener('DOMContentLoaded', (event) => {
+  hljs.addPlugin(new CopyButtonPlugin());
+  document.querySelectorAll('code').forEach((block) => {
+    hljs.highlightElement(block);
+  });
+  hljs.initLineNumbersOnLoad();
+});
+</script>
