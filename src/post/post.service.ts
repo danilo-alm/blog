@@ -8,13 +8,14 @@ import { PostsByDateDto } from './dto/posts-by-date.dto';
 import { sanitizePostContent } from 'src/common/sanitizer/sanitize-post-content';
 import { minify } from 'html-minifier';
 import { slugifyTitle } from 'src/common/slugifier/slugify-title';
+import { TIME_ZONE } from '../config/config';
 
 @Injectable()
 export class PostService {
   private readonly timeZone: string;
 
   constructor(private readonly prisma: PrismaService) {
-    this.timeZone = process.env.TIME_ZONE || 'America/Sao_Paulo';
+    this.timeZone = TIME_ZONE;
   }
 
   async create(dto: CreatePostDto): Promise<string> {

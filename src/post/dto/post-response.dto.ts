@@ -1,6 +1,6 @@
 import { Transform } from 'class-transformer';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { formatDate } from '../utils/format-date';
+import { TIME_ZONE } from 'src/config/config';
 
 export class PostResponseDto {
   @IsString()
@@ -17,9 +17,19 @@ export class PostResponseDto {
   @IsString()
   title: string;
 
-  @Transform(({ value }: { value: Date }) => formatDate(value), {
-    toClassOnly: true,
-  })
+  @Transform(
+    ({ value }: { value: Date }) => {
+      return value.toLocaleDateString('en-US', {
+        timeZone: TIME_ZONE,
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+    },
+    {
+      toClassOnly: true,
+    },
+  )
   @IsString()
   date: string;
 }
