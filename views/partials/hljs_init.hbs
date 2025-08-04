@@ -1,9 +1,14 @@
 <script>
 document.addEventListener('DOMContentLoaded', (event) => {
-  hljs.addPlugin(new CopyButtonPlugin());
-  document.querySelectorAll('code').forEach((block) => {
+  document.querySelectorAll(':not(pre) > code').forEach((block) => {
     hljs.highlightElement(block);
   });
+
+  hljs.addPlugin(new CopyButtonPlugin());
+  document.querySelectorAll('pre code').forEach((block) => {
+    hljs.highlightElement(block);
+  });
+  
   hljs.initLineNumbersOnLoad();
 });
 </script>
