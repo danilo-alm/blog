@@ -11,7 +11,11 @@ import { slugifyTitle } from 'src/common/slugifier/slugify-title';
 
 @Injectable()
 export class PostService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly timeZone: string;
+
+  constructor(private readonly prisma: PrismaService) {
+    this.timeZone = process.env.TIME_ZONE || 'America/Sao_Paulo';
+  }
 
   async create(dto: CreatePostDto): Promise<string> {
     const id = this.generatePostId(dto.title);
@@ -79,7 +83,9 @@ export class PostService {
 
   private getTodayDatePath(): string {
     const today = new Date();
-    return today.toISOString().split('T')[0].replaceAll('-', '/');
+    return today
+      .toLocaleDateString('en-CA', { timeZone: this.timeZone })
+      .replaceAll('-', '/');
   }
 
   private groupPostsByMonth(posts: PostSummaryDto[]): PostsByDateDto[] {
@@ -99,6 +105,7 @@ export class PostService {
 
   private getMonthYearLabel(date: Date): string {
     return new Date(date).toLocaleDateString('en-US', {
+      timeZone: this.timeZone,
       month: 'long',
       year: 'numeric',
     });

@@ -65,10 +65,11 @@ yarn run start:dev
 
 You should know that:
 
-- The default admin password is `secret`. Change ADMIN_PASSWORD_HASH in `.env` or `.env.docker` if needed (Bcrypt).
-- A post can have headings level 1-3 in its content. Upon publishing, they'll be converted to 2-4
-- HTML Sanitization and Minification **is** performed. Sanitization details can be seen in [sanitize-post-content.ts](src/common/sanitizer/sanitize-post-content.ts), which is also bundled to the browser (ESBuild)
-- New posts can be uploaded in `/admin/upload` (authentication needed)
+- The default admin password is `secret`. Change ADMIN_PASSWORD_HASH in `.env` or `.env.docker` if needed (Bcrypt);
+- Default timezone is 'America/Sao_Paulo'. You can change this with the env var TIME_ZONE;
+- A post can have headings level 1-3 in its content. Upon publishing, they'll be converted to 2-4;
+- HTML Sanitization and Minification **is** performed. Sanitization details can be seen in [sanitize-post-content.ts](src/common/sanitizer/sanitize-post-content.ts), which is also bundled to the browser (ESBuild);
+- New posts can be uploaded in `/admin/upload` (authentication needed).
 
 ## Technologies Used
 
