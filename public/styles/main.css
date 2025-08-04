@@ -260,6 +260,32 @@ main {
   word-wrap: break-word;
 }
 
+.post-body a {
+  color: #60a5fa;
+  text-decoration: none;
+  display: inline-block;
+  position: relative;
+}
+
+.post-body a:visited {
+  color: #9d7cff;
+}
+
+.post-body a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 2px;
+  background: currentColor;
+  transition: width 0.3s ease;
+}
+
+.post-body a:hover::after {
+  width: 100%;
+}
+
 .post-body ul,
 .post-body ol {
   margin-bottom: 1.5rem;
