@@ -1,6 +1,6 @@
 # Blog
 
-A simple blog application built with NestJS.
+A simple blog application built with NestJS. You can see it live [here](https://daniloalm.com).
 
 ## Features
 
