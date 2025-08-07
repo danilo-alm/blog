@@ -6,15 +6,17 @@ import {
   Res,
   Session,
   UnauthorizedException,
+  Param,
 } from '@nestjs/common';
 import { Response } from 'express';
 import * as bcrypt from 'bcrypt';
+import { PostService } from 'src/post/post.service';
 
 @Controller('admin')
 export class AuthController {
   private readonly adminPasswordHash: string;
 
-  constructor() {
+  constructor(private readonly postService: PostService) {
     if (!process.env.ADMIN_PASSWORD_HASH) {
       throw new Error('ADMIN_PASSWORD_HASH environment variable is required');
     }
@@ -33,9 +35,33 @@ export class AuthController {
     }
   }
 
-  @Get('/upload')
-  uploadPage(@Res() res: Response): void {
-    res.render('upload', { admin: true });
+  @Get('upload')
+  createPost(@Res() res: Response): void {
+    res.render('post_editor', { admin: true });
+  }
+
+  @Get('edit/:year/:month/:day/:slug')
+  async editPost(
+    @Res() res: Response,
+    @Param('year') year: string,
+    @Param('month') month: string,
+    @Param('day') day: string,
+    @Param('slug') slug: string,
+  ): Promise<void> {
+    const id = `${year}/${month}/${day}/${slug}`;
+    const post = await this.postService.findOne(id);
+    res.render('post_editor', {
+      admin: true,
+      edit: true,
+      ...post,
+      urlSlug: id,
+    });
+  }
+
+  @Get('dashboard')
+  async dashboardPage(@Res() res: Response): Promise<void> {
+    const posts = await this.postService.findAll(undefined, undefined, true);
+    res.render('dashboard', { admin: true, posts });
   }
 
   @Post('login')

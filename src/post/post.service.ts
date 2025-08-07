@@ -9,6 +9,9 @@ import { sanitizePostContent } from 'src/common/sanitizer/sanitize-post-content'
 import { minify } from 'html-minifier';
 import { slugifyTitle } from 'src/common/slugifier/slugify-title';
 import { TIME_ZONE } from '../config/config';
+import { UpdatePostDto } from './dto/update-post.dto';
+import { PostStatus } from './post-status.enum';
+import { PostSummaryAdminDto } from './dto/post-summary-admin.dto';
 
 @Injectable()
 export class PostService {
@@ -22,6 +25,7 @@ export class PostService {
     const id = this.generatePostId(dto.title);
     const sanitizedContent = sanitizePostContent(dto.content);
     const minifiedContent = this.minifyContent(sanitizedContent);
+    const now = new Date();
 
     const post = await this.prisma.post.create({
       data: {
@@ -29,7 +33,9 @@ export class PostService {
         title: dto.title,
         excerpt: dto.excerpt,
         content: minifiedContent,
-        date: new Date(),
+        date: now,
+        lastModified: now,
+        status: PostStatus.Unpublished,
       },
       select: { id: true },
     });
@@ -41,14 +47,19 @@ export class PostService {
     return plainToInstance(PostResponseDto, post);
   }
 
-  async findAll(page: number = 1, limit?: number): Promise<PostSummaryDto[]> {
+  async findAll(
+    page: number = 1,
+    limit?: number,
+    admin?: boolean,
+  ): Promise<PostSummaryAdminDto[]> {
     const posts = await this.prisma.post.findMany({
       skip: (page - 1) * (limit ?? 0),
       take: limit,
       orderBy: { date: 'desc' },
       omit: { content: true },
+      where: { status: admin ? undefined : PostStatus.Published },
     });
-    return plainToInstance(PostSummaryDto, posts);
+    return plainToInstance(PostSummaryAdminDto, posts);
   }
 
   async findAllGroupedByDate(
@@ -61,6 +72,27 @@ export class PostService {
 
   async remove(id: string): Promise<void> {
     await this.prisma.post.delete({ where: { id } });
+  }
+
+  async update(dto: UpdatePostDto): Promise<string> {
+    const newStatus =
+      dto.status != null
+        ? PostStatus[dto.status as keyof typeof PostStatus]
+        : undefined;
+
+    const updatedPost = await this.prisma.post.update({
+      where: { id: dto.id },
+      data: {
+        title: dto.title,
+        content: dto.content,
+        excerpt: dto.excerpt,
+        status: newStatus,
+        lastModified: new Date(),
+      },
+      select: { id: true },
+    });
+
+    return updatedPost.id;
   }
 
   private generatePostId(title: string): string {

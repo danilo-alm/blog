@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  {{> meta}}
+
+  <title>Admin Dashboard - daniloalm.com</title>
+</head>
+
+<body>
+  {{> nav}}
+
+  <main class="dashboard-container">
+    <header class="dashboard-header">
+      <h1 class="dashboard-title">Posts Dashboard</h1>
+      <a href="upload" class="add-new-button">
+        Add New Post
+      </a>
+    </header>
+
+    <section class="posts-list-grid">
+      {{#each posts}}
+      <div class="post-card">
+        <div class="post-card-content">
+          <span class="status-badge {{status}}">{{status}}</span>
+          <h2 class="post-card-title">{{title}}</h2>
+          <p class="post-card-excerpt">{{excerpt}}</p>
+          <p class="post-card-meta">Last updated: {{lastModified}}</p>
+        </div>
+        <div class="post-card-actions">
+          <a href="edit/{{id}}" class="action-button edit">
+            Edit
+          </a>
+          {{#if isPublished}}
+          <button class="action-button unpublish" onclick="unpublishPost('{{id}}')">
+            Unpublish
+          </button>
+          {{else}}
+          <button class="action-button publish" onclick="publishPost('{{id}}')">
+            Publish
+          </button>
+          {{/if}}
+          <button class="action-button delete" onclick="deletePost('{{id}}')">
+            Delete
+          </button>
+        </div>
+      </div>
+      {{/each}}
+    </section>
+  </main>
+
+  <script>
+    const editButton = document.querySelector('.action-button.edit');
+    const publishButton = document.querySelector('.action-button.publish');
+    const unpublishButton = document.querySelector('.action-button.unpublish');
+    const deleteButton = document.querySelector('.action-button.publish');
+  
+    // Functions for post actions (these would typically make API calls)
+    function editPost(id) {
+      alert('Editing post: ' + id);
+      // In a real app, this would redirect to an edit page: window.location.href = `upload.html?id=${id}`;
+    }
+
+    function unpublishPost(id) {
+      if (confirm('Are you sure you want to unpublish this post?')) {
+        alert('Unpublishing post: ' + id);
+        // In a real app, this would send an API request to change status
+        // Then re-render the list or update the specific card
+      }
+    }
+
+    function publishPost(id) {
+      if (confirm('Are you sure you want to publish this post?')) {
+        alert('Publishing post: ' + id);
+        // In a real app, this would send an API request to change status
+        // Then re-render the list or update the specific card
+      }
+    }
+
+    function deletePost(id) {
+      if (confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
+        alert('Deleting post: ' + id);
+        // In a real app, this would send an API request to delete the post
+        // Then remove the post card from the DOM
+      }
+    }
+  </script>
+</body>
+
+</html>

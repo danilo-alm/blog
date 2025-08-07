@@ -9,11 +9,13 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Res,
 } from '@nestjs/common';
-import { PostSummaryDto } from './dto/post-summary.dto';
 import { PostResponseDto } from './dto/post-response.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
+import { PostSummaryAdminDto } from './dto/post-summary-admin.dto';
 
 @Controller('api/posts')
 export class PostController {
@@ -41,8 +43,18 @@ export class PostController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  async findAll(): Promise<PostSummaryDto[]> {
+  async findAll(): Promise<PostSummaryAdminDto[]> {
     return this.postService.findAll();
+  }
+
+  @Patch()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async update(
+    @Body() updatePostDto: UpdatePostDto,
+    @Res() res: Response,
+  ): Promise<void> {
+    const id = await this.postService.update(updatePostDto);
+    res.status(HttpStatus.NO_CONTENT).location(`/posts/${id}`).send();
   }
 
   @Delete(':id')

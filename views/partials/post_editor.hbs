@@ -1,0 +1,88 @@
+<header class="upload-header">
+  {{#if edit}}
+  <h1 class="upload-title">Edit Post</h1>
+  {{else}}
+  <h1 class="upload-title">Create New Post</h1>
+  {{/if}}
+  <p class="upload-subtitle">Write and preview your blog post content</p>
+</header>
+
+<form id="post-form" data-method={{#if edit}}"PATCH"{{else}}"POST"{{/if}}>
+  <!-- Post Metadata -->
+  <section class="post-metadata">
+    <div class="metadata-row">
+
+      <div class="form-group">
+        <label for="post-title" class="form-label">Post Title</label>
+        <input type="text" id="post-title" name="title" class="form-input" placeholder="Enter your post title..."
+          required {{#if edit}} value="{{title}}" {{/if}}>
+      </div>
+
+      <div class="form-group">
+        <label for="post-slug" class="form-label">URL Slug</label>
+        <input type="text" id="post-slug" name="slug" class="form-input" placeholder="auto-generated-from-title"
+          readonly {{#if edit}} value="{{urlSlug}}" {{/if}}>
+      </div>
+
+    </div>
+
+    <div class="form-group">
+      <label for="post-excerpt" class="form-label">Excerpt</label>
+      <textarea id="post-excerpt" name="excerpt" class="form-input form-textarea"
+        placeholder="Write a brief description of your post..." rows="3">{{#if edit}}{{excerpt}}{{/if}}</textarea>
+    </div>
+
+  </section>
+
+  <!-- Editor Layout -->
+  <div class="editor-layout">
+    <!-- HTML Editor -->
+    <div class="editor-panel">
+      <div class="panel-header">
+        <h3 class="panel-title">HTML Editor</h3>
+      </div>
+      <div class="panel-content">
+        <textarea id="html-editor" name="content" class="html-editor" placeholder="Write your HTML content here...
+
+Example:
+<h2>Introduction</h2>
+<p>This is a paragraph with <strong>bold text</strong> and <em>italic text</em>.</p>
+
+<h3>Code Example</h3>
+<pre><code>console.log('Hello, World!');</code></pre>
+
+<blockquote>
+<p>This is a quote that will be styled nicely.</p>
+</blockquote>">{{#if edit}}{{content}}{{/if}}</textarea>
+      </div>
+    </div>
+
+    <!-- Preview Panel -->
+    <div class="editor-panel">
+      <div class="panel-header">
+        <h3 class="panel-title">Live Preview</h3>
+        <div class="toggle-container">
+          <span class="toggle-label">Auto Scroll</span>
+          <div id="auto-scroll-toggle" class="toggle active" onclick="window.blogEditor?.toggleScrollSync()">
+            <div class="toggle-thumb"></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-content">
+        <div id="preview-content" class="post-body preview-content">
+          <p style="color: #52525b; font-style: italic;">Start typing in the editor to see your preview...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="action-buttons">
+    <button type="button" class="btn btn-secondary" id="save-draft" onclick="window.blogEditor.saveDraft()">
+      Save Draft
+    </button>
+    <button type="submit" class="btn btn-primary">
+      Save Post
+    </button>
+  </div>
+</form>

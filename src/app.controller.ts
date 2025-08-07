@@ -4,12 +4,19 @@ import { Response } from 'express';
 
 @Controller()
 export class AppController {
-  constructor(private readonly postService: PostService) {}
+  private readonly isDevelopment: boolean;
+
+  constructor(private readonly postService: PostService) {
+    this.isDevelopment = process.env.NODE_ENV == 'development';
+  }
 
   @Get()
-  async home(@Res() res: Response): Promise<void> {
+  async home(
+    @Res() res: Response,
+    @Session() session: Record<string, any>,
+  ): Promise<void> {
     const postsByDate = await this.postService.findAllGroupedByDate();
-    res.render('home', { postsByDate });
+    res.render('home', { postsByDate, admin: this.isAdmin(session) });
   }
 
   @Get('posts/:year/:month/:day/:slug')
@@ -23,7 +30,10 @@ export class AppController {
   ): Promise<void> {
     const id = `${year}/${month}/${day}/${slug}`;
     const post = await this.postService.findOne(id);
-    const isAdmin = session.isAuthenticated as boolean;
-    res.render('post', { post, admin: isAdmin });
+    res.render('post', { post, admin: this.isAdmin(session) });
+  }
+
+  private isAdmin(session: Record<string, any>): boolean {
+    return this.isDevelopment || (session.isAuthenticated as boolean);
   }
 }
