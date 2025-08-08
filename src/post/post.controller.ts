@@ -57,9 +57,15 @@ export class PostController {
     res.status(HttpStatus.NO_CONTENT).location(`/posts/${id}`).send();
   }
 
-  @Delete(':id')
+  @Delete(':year/:month/:day/:slug')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param('id') id: string): Promise<void> {
+  async remove(
+    @Param('year') year: string,
+    @Param('month') month: string,
+    @Param('day') day: string,
+    @Param('slug') slug: string,
+  ): Promise<void> {
+    const id = `${year}/${month}/${day}/${slug}`;
     await this.postService.remove(id);
   }
 }

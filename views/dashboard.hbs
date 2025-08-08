@@ -55,12 +55,6 @@
     const unpublishButton = document.querySelector('.action-button.unpublish');
     const deleteButton = document.querySelector('.action-button.publish');
   
-    // Functions for post actions (these would typically make API calls)
-    function editPost(id) {
-      alert('Editing post: ' + id);
-      // In a real app, this would redirect to an edit page: window.location.href = `upload.html?id=${id}`;
-    }
-
     function unpublishPost(id) {
       if (confirm('Are you sure you want to unpublish this post?')) {
         alert('Unpublishing post: ' + id);
@@ -77,12 +71,34 @@
       }
     }
 
-    function deletePost(id) {
-      if (confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
-        alert('Deleting post: ' + id);
-        // In a real app, this would send an API request to delete the post
-        // Then remove the post card from the DOM
+    async function deletePost(id) {
+      const shouldContinue = confirm('Are you sure you want to delete this post? This action cannot be undone.');
+      if (!shouldContinue) return 
+      
+      const success = await fetchWrapper(`/api/posts/${id}`, undefined, 204, 'DELETE');
+
+      if (success) {
+        window.location.reload();
       }
+    }
+    
+    async function fetchWrapper(endpoint, data, expected_return_code=200, method='PATCH') {
+      const response = await fetch(endpoint, {
+        method: method,
+        headers: data ? { 'Content-Type': 'application/json' } : undefined,
+        body: data ? JSON.stringify(data) : undefined,
+      });
+
+      if (response.status === expected_return_code) {
+        return true
+      } else if (response.redirected) {  // session expired
+        window.location.href = postLocation;
+      }
+
+      const { message } = await response.json();
+      alert(`Erro: ${message}`);
+
+      return false;
     }
   </script>
 </body>
