@@ -29,7 +29,7 @@ export class AuthController {
     @Session() session: Record<string, any>,
   ): void {
     if (session.isAuthenticated) {
-      res.redirect('/admin/upload');
+      res.redirect('/admin/dashboard');
     } else {
       res.render('login');
     }
@@ -83,7 +83,7 @@ export class AuthController {
       // NestJS makes req.originalUrl '/admin/null' after losing session
       // and being redirected to login after trying to create a post. Idk why :(
       if (!redirectUrl || redirectUrl.endsWith('null')) {
-        redirectUrl = '/admin/upload';
+        redirectUrl = '/admin/dashboard';
       }
 
       delete session.redirectUrl;
