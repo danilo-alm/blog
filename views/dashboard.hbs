@@ -22,7 +22,7 @@
       {{#each posts}}
       <div class="post-card">
         <div class="post-card-content">
-          <span class="status-badge {{status}}">{{status}}</span>
+          <span class="status-badge {{status}}" id="{{id}}">{{status}}</span>
           <h2 class="post-card-title"><a href="/posts/{{id}}">{{title}}</a></h2>
           <p class="post-card-excerpt">{{excerpt}}</p>
           <p class="post-card-meta">Last updated: {{lastModified}}</p>
@@ -31,7 +31,7 @@
           <a href="edit/{{id}}" class="action-button edit">
             Edit
           </a>
-          {{#if isPublished}}
+          {{#eq status "PUBLISHED"}}
           <button class="action-button unpublish" onclick="unpublishPost('{{id}}')">
             Unpublish
           </button>
@@ -39,7 +39,7 @@
           <button class="action-button publish" onclick="publishPost('{{id}}')">
             Publish
           </button>
-          {{/if}}
+          {{/eq}}
           <button class="action-button delete" onclick="deletePost('{{id}}')">
             Delete
           </button>
@@ -50,24 +50,21 @@
   </main>
 
   <script>
-    const editButton = document.querySelector('.action-button.edit');
-    const publishButton = document.querySelector('.action-button.publish');
-    const unpublishButton = document.querySelector('.action-button.unpublish');
-    const deleteButton = document.querySelector('.action-button.publish');
-  
-    function unpublishPost(id) {
-      if (confirm('Are you sure you want to unpublish this post?')) {
-        alert('Unpublishing post: ' + id);
-        // In a real app, this would send an API request to change status
-        // Then re-render the list or update the specific card
+    async function unpublishPost(id, button) {
+      data = {id, status: 'UNPUBLISHED'}
+      const success = await fetchWrapper('/api/posts', data, 204, 'PATCH');
+
+      if (success) {
+        window.location.reload();
       }
     }
 
-    function publishPost(id) {
-      if (confirm('Are you sure you want to publish this post?')) {
-        alert('Publishing post: ' + id);
-        // In a real app, this would send an API request to change status
-        // Then re-render the list or update the specific card
+    async function publishPost(id, button) {
+      data = {id, status: 'PUBLISHED'}
+      const success = await fetchWrapper('/api/posts', data, 204, 'PATCH');
+
+      if (success) {
+        window.location.reload();
       }
     }
 

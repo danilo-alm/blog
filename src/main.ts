@@ -22,6 +22,18 @@ async function bootstrap() {
   app.setBaseViewsDir(join(__dirname, '..', 'views'));
   registerPartials();
 
+  hbs.registerHelper(
+    'eq',
+    function (
+      this: any,
+      a: unknown,
+      b: unknown,
+      options: Handlebars.HelperOptions,
+    ): string {
+      return a === b ? options.fn(this) : options.inverse(this);
+    },
+  );
+
   app.setViewEngine('hbs');
 
   await app.listen(

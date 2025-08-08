@@ -1,4 +1,4 @@
 export enum PostStatus {
-  Published,
-  Unpublished,
+  PUBLISHED,
+  UNPUBLISHED,
 }

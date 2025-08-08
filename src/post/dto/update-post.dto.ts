@@ -1,4 +1,6 @@
+import { Transform } from 'class-transformer';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { PostStatus } from '../post-status.enum';
 
 export class UpdatePostDto {
   @IsString()
@@ -21,7 +23,13 @@ export class UpdatePostDto {
   excerpt?: string;
 
   @IsOptional()
-  @IsString()
   @IsNotEmpty()
-  status?: string;
+  @Transform(
+    ({ value }: { value: string }) =>
+      PostStatus[value as keyof typeof PostStatus],
+    {
+      toPlainOnly: true,
+    },
+  )
+  status?: number;
 }

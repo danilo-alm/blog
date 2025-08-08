@@ -28,9 +28,10 @@ export class AppController {
     @Session() session: Record<string, any>,
     @Res() res: Response,
   ): Promise<void> {
+    const isAdmin = this.isAdmin(session);
     const id = `${year}/${month}/${day}/${slug}`;
-    const post = await this.postService.findOne(id);
-    res.render('post', { post, admin: this.isAdmin(session) });
+    const post = await this.postService.findOne(id, isAdmin);
+    res.render('post', { post, admin: isAdmin });
   }
 
   private isAdmin(session: Record<string, any>): boolean {

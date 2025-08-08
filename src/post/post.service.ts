@@ -35,16 +35,23 @@ export class PostService {
         content: minifiedContent,
         date: now,
         lastModified: now,
-        status: PostStatus.Unpublished,
+        status: PostStatus.UNPUBLISHED,
       },
       select: { id: true },
     });
     return post.id;
   }
 
-  async findOne(id: string): Promise<PostResponseDto> {
+  async findOne(
+    id: string,
+    isAdmin: boolean = false,
+  ): Promise<PostResponseDto> {
     const post = await this.prisma.post.findFirstOrThrow({
-      where: { id, deleted: false },
+      where: {
+        id,
+        status: isAdmin ? undefined : PostStatus.PUBLISHED,
+        deleted: false,
+      },
       omit: { deleted: true },
     });
     return plainToInstance(PostResponseDto, post);
@@ -61,7 +68,7 @@ export class PostService {
       orderBy: { date: 'desc' },
       omit: { content: true, deleted: true },
       where: {
-        status: admin ? undefined : PostStatus.Published,
+        status: admin ? undefined : PostStatus.PUBLISHED,
         deleted: false,
       },
     });
@@ -84,18 +91,13 @@ export class PostService {
   }
 
   async update(dto: UpdatePostDto): Promise<string> {
-    const newStatus =
-      dto.status != null
-        ? PostStatus[dto.status as keyof typeof PostStatus]
-        : undefined;
-
     const updatedPost = await this.prisma.post.update({
       where: { id: dto.id },
       data: {
         title: dto.title,
         content: dto.content,
         excerpt: dto.excerpt,
-        status: newStatus,
+        status: dto.status,
         lastModified: new Date(),
       },
       select: { id: true },

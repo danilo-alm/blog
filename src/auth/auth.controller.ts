@@ -43,13 +43,17 @@ export class AuthController {
   @Get('edit/:year/:month/:day/:slug')
   async editPost(
     @Res() res: Response,
+    @Session() session: Record<string, any>,
     @Param('year') year: string,
     @Param('month') month: string,
     @Param('day') day: string,
     @Param('slug') slug: string,
   ): Promise<void> {
     const id = `${year}/${month}/${day}/${slug}`;
-    const post = await this.postService.findOne(id);
+    const post = await this.postService.findOne(
+      id,
+      session.isAuthenticated as boolean,
+    );
     res.render('post_editor', {
       admin: true,
       edit: true,
@@ -61,6 +65,7 @@ export class AuthController {
   @Get('dashboard')
   async dashboardPage(@Res() res: Response): Promise<void> {
     const posts = await this.postService.findAll(undefined, undefined, true);
+
     res.render('dashboard', { admin: true, posts });
   }
 
