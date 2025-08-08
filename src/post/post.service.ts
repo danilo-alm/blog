@@ -43,7 +43,10 @@ export class PostService {
   }
 
   async findOne(id: string): Promise<PostResponseDto> {
-    const post = await this.prisma.post.findFirstOrThrow({ where: { id } });
+    const post = await this.prisma.post.findFirstOrThrow({
+      where: { id, deleted: false },
+      omit: { deleted: true },
+    });
     return plainToInstance(PostResponseDto, post);
   }
 
@@ -56,8 +59,11 @@ export class PostService {
       skip: (page - 1) * (limit ?? 0),
       take: limit,
       orderBy: { date: 'desc' },
-      omit: { content: true },
-      where: { status: admin ? undefined : PostStatus.Published },
+      omit: { content: true, deleted: true },
+      where: {
+        status: admin ? undefined : PostStatus.Published,
+        deleted: false,
+      },
     });
     return plainToInstance(PostSummaryAdminDto, posts);
   }
@@ -71,7 +77,10 @@ export class PostService {
   }
 
   async remove(id: string): Promise<void> {
-    await this.prisma.post.delete({ where: { id } });
+    await this.prisma.post.update({
+      where: { id },
+      data: { deleted: true },
+    });
   }
 
   async update(dto: UpdatePostDto): Promise<string> {

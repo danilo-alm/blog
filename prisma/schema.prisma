@@ -16,4 +16,5 @@ model Post {
   date          DateTime  @default(now())
   lastModified  DateTime  @default(now())
   status        Int       @default(1)  // unpublished
+  deleted       Boolean   @default(false)
 }
