@@ -5,7 +5,7 @@
   {{> meta}}
   <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.15.4/beautify-html.js"></script>
   <meta name="robots" content="noindex">
-  <title>Create New Post</title>
+  <title>{{#if edit}}Create New Post{{else}}Edit Post{{/if}}</title>
 </head>
 
 <body>
@@ -14,12 +14,103 @@
 
   <main class="upload-container">
     {{> back_to_home}}
-{{> post_editor}}
+{{> post_editor_main}}
   </main>
 
   <script src="/scripts/sanitize.js"></script>
   <script src="/scripts/slugify.js"></script>
   <script>
+    class DraftManager {
+      constructor({ titleInput, excerptInput, htmlEditor, slugInput, saveDraftBtn }, isEdit) {
+        this.titleInput = titleInput;
+        this.excerptInput = excerptInput;
+        this.htmlEditor = htmlEditor;
+        this.slugInput = slugInput;
+        this.saveDraftBtn = saveDraftBtn;
+
+        this.DRAFT_KEY = 'blog-post-draft';
+        this.AUTOSAVE_DELAY = 2000;
+        this.autoSaveTimeout = null;
+        this.isEdit = isEdit;
+
+        if (!this.isEdit) {
+          this.loadDraft();
+          this.bindEvents();
+        } else {
+          this.saveDraftBtn.style.visibility = 'hidden';
+        }
+      }
+
+      bindEvents() {
+        [this.titleInput, this.excerptInput, this.htmlEditor].forEach(input => {
+          input.addEventListener('input', () => this.scheduleAutoSave());
+        });
+
+        document.addEventListener('keydown', (e) => this.handleKeyboardShortcuts(e));
+      }
+
+      scheduleAutoSave() {
+        clearTimeout(this.autoSaveTimeout);
+        this.autoSaveTimeout = setTimeout(() => {
+          this.saveDraftToStorage();
+        }, this.AUTOSAVE_DELAY);
+      }
+
+      saveDraftToStorage() {
+        const formData = {
+          title: this.titleInput.value,
+          excerpt: this.excerptInput.value,
+          content: this.htmlEditor.value,
+          slug: this.slugInput.value
+        };
+        localStorage.setItem(this.DRAFT_KEY, JSON.stringify(formData));
+      }
+
+      saveDraft() {
+        this.saveDraftToStorage();
+        this.showSaveConfirmation();
+      }
+
+      loadDraft() {
+        const draft = localStorage.getItem(this.DRAFT_KEY);
+        if (!draft) return;
+
+        try {
+          const data = JSON.parse(draft);
+          this.titleInput.value = data.title || '';
+          this.excerptInput.value = data.excerpt || '';
+          this.htmlEditor.value = data.content || '';
+          this.slugInput.value = data.slug || '';
+        } catch (error) {
+          console.error('Failed to load draft:', error);
+        }
+      }
+
+      clearDraft() {
+        localStorage.removeItem(this.DRAFT_KEY);
+      }
+
+      showSaveConfirmation() {
+        const btn = this.saveDraftBtn;
+        const originalText = btn.innerHTML;
+
+        btn.innerHTML = 'Saved!';
+        btn.style.backgroundColor = '#059669';
+
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.style.backgroundColor = '';
+        }, 2000);
+      }
+
+      handleKeyboardShortcuts(event) {
+        if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+          event.preventDefault();
+          this.saveDraft();
+        }
+      }
+    }
+
     class BlogEditor {
       constructor() {
         this.elements = {
@@ -33,20 +124,14 @@
           saveDraftBtn: document.querySelector('#save-draft')
         };
 
-        this.autoSaveTimeout = null;
-        this.DRAFT_KEY = 'blog-post-draft';
-        this.AUTOSAVE_DELAY = 2000;
-
         this.formMethod = this.elements.postForm.dataset.method;
         this.isEdit = this.formMethod !== 'POST';
 
+        this.drafts = new DraftManager(this.elements, this.isEdit);
         this.init();
       }
 
       init() {
-        if (!this.isEdit) {
-          this.loadDraft();
-        }
         this.bindEvents();
         this.updatePreview();
         this.configureScrollSync();
@@ -58,11 +143,14 @@
 
       listenFormSubmit() {
         this.elements.postForm.addEventListener('submit', async (e) => {
-          e.preventDefault()
+          e.preventDefault();
 
           const formData = new FormData(this.elements.postForm);
           const data = Object.fromEntries(formData.entries());
-          data['id'] = this.elements.slugInput.value;  // ignored on creation
+          
+          if (this.isEdit) {
+            data['id'] = this.elements.slugInput.value;
+          }
 
           const response = await fetch('/api/posts', {
             method: this.formMethod,
@@ -72,11 +160,15 @@
 
           const postLocation = response.headers.get('Location');
 
-          if (response.status === 201 || response.status === 204) { // success
-            this.clearDraft();
+          if (response.status === 201 || response.status === 204) {
+            if (!this.isEdit) {
+              this.drafts.clearDraft();
+            }
             window.location.href = postLocation;
-          } else if (response.redirected) { // needs login
-            this.saveDraft()
+          } else if (response.redirected) {
+            if (!this.isEdit) {
+              this.drafts.saveDraft();
+            }
             window.location.href = postLocation;
           } else {
             const { message } = await response.json();
@@ -86,25 +178,14 @@
       }
 
       bindEvents() {
-        // Editor events
         this.elements.htmlEditor.addEventListener('input', () => this.updatePreview());
         this.elements.htmlEditor.addEventListener('paste', () => {
           setTimeout(() => this.updatePreview(), 10);
         });
         this.elements.htmlEditor.addEventListener('scroll', () => this.handleEditorScroll());
 
-        // Form events
         if (!this.isEdit) {
           this.elements.titleInput.addEventListener('input', () => this.updateSlug());
-
-          // Auto-save events
-          [this.elements.titleInput, this.elements.excerptInput, this.elements.htmlEditor]
-            .forEach(input => input.addEventListener('input', () => this.scheduleAutoSave()));
-
-          // Keyboard shortcuts
-          document.addEventListener('keydown', (e) => this.handleKeyboardShortcuts(e));
-        } else {
-          this.elements.saveDraftBtn.style.visibility = 'hidden'
         }
       }
 
@@ -122,62 +203,6 @@
       async updateSlug() {
         const title = this.elements.titleInput.value;
         this.elements.slugInput.value = title ? slugifyModule.slugifyTitle(title) : ''
-      }
-
-      scheduleAutoSave() {
-        clearTimeout(this.autoSaveTimeout);
-        this.autoSaveTimeout = setTimeout(() => {
-          this.saveDraftToStorage();
-        }, this.AUTOSAVE_DELAY);
-      }
-
-      saveDraftToStorage() {
-        const formData = {
-          title: this.elements.titleInput.value,
-          excerpt: this.elements.excerptInput.value,
-          content: this.elements.htmlEditor.value,
-          slug: this.elements.slugInput.value
-        };
-
-        localStorage.setItem(this.DRAFT_KEY, JSON.stringify(formData));
-      }
-
-      saveDraft() {
-        this.saveDraftToStorage();
-        this.showSaveConfirmation();
-      }
-
-      showSaveConfirmation() {
-        const btn = this.elements.saveDraftBtn;
-        const originalText = btn.innerHTML;
-
-        btn.innerHTML = 'Saved!';
-        btn.style.backgroundColor = '#059669';
-
-        setTimeout(() => {
-          btn.innerHTML = originalText;
-          btn.style.backgroundColor = '';
-        }, 2000);
-      }
-
-      loadDraft() {
-        const draft = localStorage.getItem(this.DRAFT_KEY);
-
-        if (!draft) return;
-
-        try {
-          const data = JSON.parse(draft);
-          this.elements.titleInput.value = data.title || '';
-          this.elements.excerptInput.value = data.excerpt || '';
-          this.elements.htmlEditor.value = data.content || '';
-          this.elements.slugInput.value = data.slug || '';
-        } catch (error) {
-          console.error('Failed to load draft:', error);
-        }
-      }
-
-      clearDraft() {
-        localStorage.removeItem(this.DRAFT_KEY);
       }
 
       handleEditorScroll() {
@@ -203,18 +228,12 @@
         const isActive = this.elements.autoScrollToggle.classList.contains('active');
         this.elements.previewContent.style.overflow = isActive ? 'hidden' : 'auto';
       }
-
-      handleKeyboardShortcuts(event) {
-        if ((event.ctrlKey || event.metaKey) && event.key === 's') {
-          event.preventDefault();
-          this.saveDraft();
-        }
-      }
     }
 
     document.addEventListener('DOMContentLoaded', function () {
       window.blogEditor = new BlogEditor();
     });
+
   </script>
 </body>
 
