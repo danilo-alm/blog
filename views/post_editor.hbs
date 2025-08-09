@@ -212,41 +212,27 @@
       }
 
       handleEditorScroll() {
-        if (!this.elements.autoScrollToggle.classList.contains('active') || this.isScrollingPreview) return;
+        this.syncScroll(this.elements.htmlEditor, this.elements.previewContent, 'isScrollingEditor', 'isScrollingPreview');
+      }
 
-        this.isScrollingEditor = true;
-        const editor = this.elements.htmlEditor;
-        const preview = this.elements.previewContent;
-
-        const scrollPercent = editor.scrollTop / (editor.scrollHeight - editor.clientHeight);
-        preview.scrollTop = scrollPercent * (preview.scrollHeight - preview.clientHeight);
-        
-        if (this.existingTimeout) {
-          clearTimeout(this.existingTimeout);
-        }
-
-        this.existingTimeout = setTimeout(() => {
-          console.log('set scrollingeditor to false')
-          this.isScrollingEditor = false;
-        }, 100);
+      handlePreviewScroll() {
+        this.syncScroll(this.elements.previewContent, this.elements.htmlEditor, 'isScrollingPreview', 'isScrollingEditor');
       }
       
-      handlePreviewScroll() {
-        if (!this.elements.autoScrollToggle.classList.contains('active') || this.isScrollingEditor) return;
+      syncScroll(source, target, flagProp, otherFlagProp) {
+        if (!this.elements.autoScrollToggle.classList.contains('active') || this[otherFlagProp]) return;
 
-        this.isScrollingPreview = true;
-        const editor = this.elements.htmlEditor;
-        const preview = this.elements.previewContent;
+        this[flagProp] = true;
 
-        const scrollPercent = preview.scrollTop / (preview.scrollHeight - preview.clientHeight);
-        editor.scrollTop = scrollPercent * (editor.scrollHeight - editor.clientHeight);
+        const scrollPercent = source.scrollTop / (source.scrollHeight - source.clientHeight);
+        target.scrollTop = scrollPercent * (target.scrollHeight - target.clientHeight);
 
         if (this.existingTimeout) {
           clearTimeout(this.existingTimeout);
         }
 
         this.existingTimeout = setTimeout(() => {
-          this.isScrollingPreview = false;
+          this[flagProp] = false;
         }, 100);
       }
 
