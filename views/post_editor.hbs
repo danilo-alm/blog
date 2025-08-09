@@ -126,6 +126,10 @@
 
         this.formMethod = this.elements.postForm.dataset.method;
         this.isEdit = this.formMethod !== 'POST';
+        
+        this.isScrollingEditor = false;
+        this.isScrollingPreview = false;
+        this.existingTimeout = undefined;
 
         this.drafts = new DraftManager(this.elements, this.isEdit);
         this.init();
@@ -182,7 +186,9 @@
         this.elements.htmlEditor.addEventListener('paste', () => {
           setTimeout(() => this.updatePreview(), 10);
         });
+
         this.elements.htmlEditor.addEventListener('scroll', () => this.handleEditorScroll());
+        this.elements.previewContent.addEventListener('scroll', () => this.handlePreviewScroll());
 
         if (!this.isEdit) {
           this.elements.titleInput.addEventListener('input', () => this.updateSlug());
@@ -206,13 +212,42 @@
       }
 
       handleEditorScroll() {
-        if (!this.elements.autoScrollToggle.classList.contains('active')) return;
+        if (!this.elements.autoScrollToggle.classList.contains('active') || this.isScrollingPreview) return;
 
+        this.isScrollingEditor = true;
         const editor = this.elements.htmlEditor;
         const preview = this.elements.previewContent;
 
         const scrollPercent = editor.scrollTop / (editor.scrollHeight - editor.clientHeight);
         preview.scrollTop = scrollPercent * (preview.scrollHeight - preview.clientHeight);
+        
+        if (this.existingTimeout) {
+          clearTimeout(this.existingTimeout);
+        }
+
+        this.existingTimeout = setTimeout(() => {
+          console.log('set scrollingeditor to false')
+          this.isScrollingEditor = false;
+        }, 100);
+      }
+      
+      handlePreviewScroll() {
+        if (!this.elements.autoScrollToggle.classList.contains('active') || this.isScrollingEditor) return;
+
+        this.isScrollingPreview = true;
+        const editor = this.elements.htmlEditor;
+        const preview = this.elements.previewContent;
+
+        const scrollPercent = preview.scrollTop / (preview.scrollHeight - preview.clientHeight);
+        editor.scrollTop = scrollPercent * (editor.scrollHeight - editor.clientHeight);
+
+        if (this.existingTimeout) {
+          clearTimeout(this.existingTimeout);
+        }
+
+        this.existingTimeout = setTimeout(() => {
+          this.isScrollingPreview = false;
+        }, 100);
       }
 
       configureScrollSync() {
@@ -226,7 +261,13 @@
 
       updateScrollBehavior() {
         const isActive = this.elements.autoScrollToggle.classList.contains('active');
-        this.elements.previewContent.style.overflow = isActive ? 'hidden' : 'auto';
+        const previewContent = this.elements.previewContent;
+
+        if (isActive) {
+          previewContent.style.scrollbarWidth = 'none';
+        } else {
+          previewContent.style.scrollbarWidth = 'unset';
+        }
       }
     }
 
